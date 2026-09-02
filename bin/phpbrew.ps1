@@ -20,7 +20,7 @@ function Show-Help {
         '  phpbrew use <version> [--ts|--nts]        使用する PHP バージョンを切り替え',
         '  phpbrew list, phpbrew ls                  インストール済みバージョン一覧を表示',
         '  phpbrew current                           現在使用中のバージョンを表示',
-        '  phpbrew prune                             各ブランチの最新パッチ以外の古いバージョンをまとめて削除（使用中のバージョンは保護）',
+        '  phpbrew prune [--dry-run]                 各ブランチの最新パッチ以外の古いバージョンをまとめて削除（使用中のバージョンは保護、削除前に確認）',
         '  phpbrew exec [code]                       現在のバージョンで対話シェルを起動、または引数のコードを実行 (php -a / php -r)',
         '  phpbrew config threading [ts|nts]                既定の Thread Safe / Non-Thread Safe 設定を取得・変更',
         '  phpbrew config ini-template [development|production]  インストール時に php.ini の元にするテンプレートを取得・変更',
@@ -84,7 +84,10 @@ function Invoke-Phpbrew {
         'list' { Show-VersionList }
         'ls' { Show-VersionList }
         'current' { Show-CurrentVersion }
-        'prune' { Invoke-Prune }
+        'prune' {
+            $dryRun = $rest -contains '--dry-run'
+            Invoke-Prune -DryRun:$dryRun
+        }
         'exec' { Invoke-PhpExec -CodeArgs $rest }
         'config' { Invoke-ConfigCommand -Arguments $rest }
         default {

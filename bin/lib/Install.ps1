@@ -125,6 +125,7 @@ function Uninstall-PhpVersion {
 }
 
 function Invoke-Prune {
+    param([switch]$DryRun)
     Initialize-PhpbrewHome
     $dirs = Get-InstalledVersionDirs
     if (-not $dirs -or $dirs.Count -eq 0) {
@@ -153,6 +154,24 @@ function Invoke-Prune {
 
     if ($toRemove.Count -eq 0) {
         Write-PhpbrewInfo "削除対象の古いバージョンはありません（各ブランチの最新パッチのみがインストールされています）。"
+        return
+    }
+
+    Write-PhpbrewInfo "以下の $($toRemove.Count) 件を削除します:"
+    foreach ($d in $toRemove) {
+        Write-PhpbrewInfo "  $($d.Name)"
+    }
+
+    if ($DryRun) {
+        Write-PhpbrewInfo ''
+        Write-PhpbrewInfo "--dry-run のため削除は行っていません。"
+        return
+    }
+
+    Write-PhpbrewInfo ''
+    $answer = Read-Host "削除してよろしいですか？ (y/N)"
+    if ($answer -notin @('y', 'Y', 'yes', 'Yes')) {
+        Write-PhpbrewInfo "キャンセルしました。"
         return
     }
 

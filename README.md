@@ -34,7 +34,7 @@ phpbrew uninstall <version> [--ts|--nts]  指定バージョンをアンイン�
 phpbrew use <version> [--ts|--nts]        使用する PHP バージョンを切り替え
 phpbrew list, phpbrew ls                  インストール済みバージョン一覧を表示
 phpbrew current                           現在使用中のバージョンを表示
-phpbrew prune                             各ブランチの最新パッチ以外の古いバージョンをまとめて削除（使用中のバージョンは保護）
+phpbrew prune [--dry-run]                 各ブランチの最新パッチ以外の古いバージョンをまとめて削除（使用中のバージョンは保護、削除前に確認）
 phpbrew exec [code]                       現在のバージョンで対話シェルを起動、または引数のコードを実行 (php -a / php -r)
 phpbrew config threading [ts|nts]                       既定の Thread Safe / Non-Thread Safe 設定を取得・変更
 phpbrew config ini-template [development|production]    php.ini 作成に使うテンプレートを取得・変更
@@ -70,8 +70,11 @@ phpbrew current
 # 既定の threading を ts に変更
 phpbrew config threading ts
 
-# 各ブランチの最新パッチ以外の古いバージョンをまとめて削除（使用中のバージョンは保護）
+# 各ブランチの最新パッチ以外の古いバージョンをまとめて削除（削除対象を表示し、確認後に実行。使用中のバージョンは保護）
 phpbrew prune
+
+# 削除対象の確認だけ行い、実際には削除しない
+phpbrew prune --dry-run
 
 # 現在のバージョンで PHP コードを実行 / 対話シェルを起動
 phpbrew exec "echo phpversion();"
