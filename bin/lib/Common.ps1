@@ -78,6 +78,22 @@ function Get-InstalledVersionDirs {
     Get-ChildItem -LiteralPath $Script:VersionsDir -Directory | Sort-Object Name
 }
 
+function Resolve-LocalVersionName {
+    param(
+        [Parameter(Mandatory)][string]$VersionInput,
+        [string]$ThreadingOverride
+    )
+    if ($VersionInput -match '^\d+\.\d+\.\d+-(ts|nts)$') {
+        return $VersionInput
+    }
+    if ($VersionInput -match '^\d+\.\d+\.\d+$') {
+        $threading = if ($ThreadingOverride) { $ThreadingOverride } else { (Get-PhpbrewConfig).threading }
+        Assert-ValidThreading $threading
+        return "$VersionInput-$threading"
+    }
+    Exit-WithError "バージョン指定の形式が不正です: $VersionInput (例: 8.3.12 または 8.3.12-nts)"
+}
+
 function Get-CurrentVersionName {
     if (-not (Test-Path -LiteralPath $Script:CurrentLink)) {
         return $null
