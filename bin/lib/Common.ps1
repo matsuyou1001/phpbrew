@@ -11,7 +11,7 @@ $Script:ConfigPath    = Join-Path $Script:PhpbrewHome 'config.json'
 $Script:DefaultConfig = @{ threading = 'nts' }
 
 function Write-PhpbrewInfo {
-    param([Parameter(Mandatory)][string]$Message)
+    param([Parameter(Mandatory)][AllowEmptyString()][string]$Message)
     Write-Host $Message
 }
 
