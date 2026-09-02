@@ -62,6 +62,22 @@ function Assert-ValidThreading {
     }
 }
 
+function Get-Sha256Hex {
+    param([Parameter(Mandatory)][string]$Path)
+    $sha256 = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        $stream = [System.IO.File]::OpenRead($Path)
+        try {
+            $hashBytes = $sha256.ComputeHash($stream)
+        } finally {
+            $stream.Dispose()
+        }
+    } finally {
+        $sha256.Dispose()
+    }
+    return -join ($hashBytes | ForEach-Object { $_.ToString('x2') })
+}
+
 function Enable-Tls12 {
     try {
         [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12

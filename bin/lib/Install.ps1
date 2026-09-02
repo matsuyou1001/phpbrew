@@ -33,8 +33,8 @@ function Install-PhpVersion {
     }
 
     if ($release.Sha256) {
-        $actualHash = (Get-FileHash -LiteralPath $cachePath -Algorithm SHA256).Hash
-        if ($actualHash -ne $release.Sha256.ToUpperInvariant()) {
+        $actualHash = Get-Sha256Hex -Path $cachePath
+        if ($actualHash -ne $release.Sha256.ToLowerInvariant()) {
             Remove-Item -LiteralPath $cachePath -Force
             Exit-WithError "チェックサムが一致しません。ダウンロードをやり直してください。"
         }
