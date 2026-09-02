@@ -123,3 +123,61 @@ function Uninstall-PhpVersion {
     Remove-Item -LiteralPath $targetDir -Recurse -Force
     Write-PhpbrewInfo "PHP $localName をアンインストールしました。"
 }
+
+function Invoke-Prune {
+    param([switch]$DryRun)
+    Initialize-PhpbrewHome
+    $dirs = Get-InstalledVersionDirs
+    if (-not $dirs -or $dirs.Count -eq 0) {
+        Write-PhpbrewInfo "インストール済みの PHP バージョンはありません。"
+        return
+    }
+    $currentName = Get-CurrentVersionName
+
+    $groups = $dirs | Group-Object {
+        if ($_.Name -match '^(?<branch>\d+\.\d+)\.\d+-(?<th>ts|nts)$') {
+            "$($Matches['branch'])-$($Matches['th'])"
+        } else {
+            $_.Name
+        }
+    }
+
+    $toRemove = @()
+    foreach ($g in $groups) {
+        if ($g.Group.Count -le 1) { continue }
+        $sorted = $g.Group | Sort-Object { [version]($_.Name -replace '-(ts|nts)$', '') } -Descending
+        foreach ($d in ($sorted | Select-Object -Skip 1)) {
+            if ($d.Name -eq $currentName) { continue }
+            $toRemove += $d
+        }
+    }
+
+    if ($toRemove.Count -eq 0) {
+        Write-PhpbrewInfo "削除対象の古いバージョンはありません（各ブランチの最新パッチのみがインストールされています）。"
+        return
+    }
+
+    Write-PhpbrewInfo "以下の $($toRemove.Count) 件を削除します:"
+    foreach ($d in $toRemove) {
+        Write-PhpbrewInfo "  $($d.Name)"
+    }
+
+    if ($DryRun) {
+        Write-PhpbrewInfo ''
+        Write-PhpbrewInfo "--dry-run のため削除は行っていません。"
+        return
+    }
+
+    Write-PhpbrewInfo ''
+    $answer = Read-Host "削除してよろしいですか？ (y/N)"
+    if ($answer -notin @('y', 'Y', 'yes', 'Yes')) {
+        Write-PhpbrewInfo "キャンセルしました。"
+        return
+    }
+
+    foreach ($d in $toRemove) {
+        Remove-Item -LiteralPath $d.FullName -Recurse -Force
+        Write-PhpbrewInfo "削除しました: $($d.Name)"
+    }
+    Write-PhpbrewInfo "$($toRemove.Count) 件の古いバージョンを削除しました。"
+}
