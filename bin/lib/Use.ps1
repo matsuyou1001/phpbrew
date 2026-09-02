@@ -1,4 +1,4 @@
-# phpbrew - use / list / current
+﻿# phpbrew - use / list / current
 # current ディレクトリジャンクションの管理と User PATH への登録
 
 function Add-ToUserPath {

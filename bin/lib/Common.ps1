@@ -1,4 +1,4 @@
-# phpbrew - 共通ヘルパー
+﻿# phpbrew - 共通ヘルパー
 # パス定義・ホームディレクトリ初期化・config 読み書き・出力ユーティリティ
 
 $Script:PhpbrewHome   = Join-Path $env:USERPROFILE '.phpbrew'

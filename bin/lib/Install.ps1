@@ -1,4 +1,4 @@
-# phpbrew - install / uninstall
+﻿# phpbrew - install / uninstall
 
 function Install-PhpVersion {
     param(

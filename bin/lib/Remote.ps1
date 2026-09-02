@@ -1,4 +1,4 @@
-# phpbrew - リモートの PHP Windows ビルド一覧取得・解決
+﻿# phpbrew - リモートの PHP Windows ビルド一覧取得・解決
 # 情報源:
 #   現行ブランチの最新パッチ: https://downloads.php.net/~windows/releases/releases.json
 #   過去バージョン(アーカイブ): https://downloads.php.net/~windows/releases/archives/ (HTMLディレクトリ一覧)

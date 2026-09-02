@@ -1,4 +1,4 @@
-# phpbrew - config (既定の TS/NTS 設定など)
+﻿# phpbrew - config (既定の TS/NTS 設定など)
 
 function Show-Config {
     $config = Get-PhpbrewConfig
