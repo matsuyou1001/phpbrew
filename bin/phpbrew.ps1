@@ -19,10 +19,14 @@ function Show-Help {
         '  phpbrew use <version> [--ts|--nts]        使用する PHP バージョンを切り替え',
         '  phpbrew list, phpbrew ls                  インストール済みバージョン一覧を表示',
         '  phpbrew current                           現在使用中のバージョンを表示',
-        '  phpbrew config threading [ts|nts]         既定の Thread Safe / Non-Thread Safe 設定を取得・変更',
+        '  phpbrew config threading [ts|nts]                既定の Thread Safe / Non-Thread Safe 設定を取得・変更',
+        '  phpbrew config ini-template [development|production]  インストール時に php.ini の元にするテンプレートを取得・変更',
         '',
         "<version> は '8.3.12' のようなフル指定の他、'8.3' のようなブランチ指定（最新パッチに解決）や",
-        "'latest' も指定できます。--ts / --nts を省略した場合は 'phpbrew config threading' の設定値が使われます。"
+        "'latest' も指定できます。--ts / --nts を省略した場合は 'phpbrew config threading' の設定値が使われます。",
+        '',
+        "install 時、同じマイナーバージョン・threading の php.ini が既にインストール済みならそれを引き継ぎ、",
+        "無ければ 'phpbrew config ini-template' で指定したテンプレート (既定: development) から php.ini を作成します。"
     )
     foreach ($line in $lines) { Write-PhpbrewInfo $line }
 }

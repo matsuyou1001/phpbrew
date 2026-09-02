@@ -1,5 +1,54 @@
 ﻿# phpbrew - install / uninstall
 
+function Find-TemplatePhpIni {
+    param(
+        [Parameter(Mandatory)][string]$Version,
+        [Parameter(Mandatory)][string]$Threading,
+        [Parameter(Mandatory)][string]$ExcludeDirName
+    )
+    $branch = ($Version -split '\.')[0..1] -join '.'
+    $branchPattern = "^$([regex]::Escape($branch))\.\d+-(ts|nts)$"
+    $candidates = Get-InstalledVersionDirs | Where-Object {
+        $_.Name -ne $ExcludeDirName -and $_.Name -match $branchPattern
+    }
+    $sorted = $candidates | Sort-Object -Property `
+        @{Expression = { if ($_.Name -like "*-$Threading") { 0 } else { 1 } } }, `
+        @{Expression = { [version]($_.Name -replace '-(ts|nts)$', '') }; Descending = $true }
+    foreach ($dir in $sorted) {
+        $iniPath = Join-Path $dir.FullName 'php.ini'
+        if (Test-Path -LiteralPath $iniPath) {
+            return $iniPath
+        }
+    }
+    return $null
+}
+
+function Initialize-PhpIni {
+    param(
+        [Parameter(Mandatory)][string]$TargetDir,
+        [Parameter(Mandatory)][string]$Version,
+        [Parameter(Mandatory)][string]$Threading,
+        [Parameter(Mandatory)][string]$LocalName
+    )
+    $iniPath = Join-Path $TargetDir 'php.ini'
+    if (Test-Path -LiteralPath $iniPath) { return }
+
+    $template = Find-TemplatePhpIni -Version $Version -Threading $Threading -ExcludeDirName $LocalName
+    if ($template) {
+        Copy-Item -LiteralPath $template -Destination $iniPath -Force
+        Write-PhpbrewInfo "同じマイナーバージョンの php.ini を引き継ぎました: $template"
+        return
+    }
+
+    $iniTemplate = (Get-PhpbrewConfig).'ini-template'
+    Assert-ValidIniTemplate $iniTemplate
+    $templateIni = Join-Path $TargetDir "php.ini-$iniTemplate"
+    if (Test-Path -LiteralPath $templateIni) {
+        Copy-Item -LiteralPath $templateIni -Destination $iniPath -Force
+        Write-PhpbrewInfo "php.ini-$iniTemplate から php.ini を作成しました。"
+    }
+}
+
 function Install-PhpVersion {
     param(
         [Parameter(Mandatory)][string]$VersionArg,
@@ -47,6 +96,8 @@ function Install-PhpVersion {
         Remove-Item -LiteralPath $targetDir -Recurse -Force -ErrorAction SilentlyContinue
         Exit-WithError "展開に失敗しました: $($_.Exception.Message)"
     }
+
+    Initialize-PhpIni -TargetDir $targetDir -Version $release.Version -Threading $threading -LocalName $localName
 
     Write-PhpbrewInfo "PHP $localName をインストールしました。'phpbrew use $($release.Version)' で切り替えられます。"
 }

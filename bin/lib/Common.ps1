@@ -8,7 +8,7 @@ $Script:CacheDir      = Join-Path $Script:PhpbrewHome 'cache'
 $Script:CurrentLink   = Join-Path $Script:PhpbrewHome 'current'
 $Script:ConfigPath    = Join-Path $Script:PhpbrewHome 'config.json'
 
-$Script:DefaultConfig = @{ threading = 'nts' }
+$Script:DefaultConfig = @{ threading = 'nts'; 'ini-template' = 'development' }
 
 function Write-PhpbrewInfo {
     param([Parameter(Mandatory)][AllowEmptyString()][string]$Message)
@@ -59,6 +59,13 @@ function Assert-ValidThreading {
     param([Parameter(Mandatory)][string]$Threading)
     if ($Threading -notin @('ts', 'nts')) {
         Exit-WithError "threading は 'ts' または 'nts' を指定してください: $Threading"
+    }
+}
+
+function Assert-ValidIniTemplate {
+    param([Parameter(Mandatory)][string]$IniTemplate)
+    if ($IniTemplate -notin @('development', 'production')) {
+        Exit-WithError "ini-template は 'development' または 'production' を指定してください: $IniTemplate"
     }
 }
 

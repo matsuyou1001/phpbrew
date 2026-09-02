@@ -34,7 +34,8 @@ phpbrew uninstall <version> [--ts|--nts]  指定バージョンをアンイン�
 phpbrew use <version> [--ts|--nts]        使用する PHP バージョンを切り替え
 phpbrew list, phpbrew ls                  インストール済みバージョン一覧を表示
 phpbrew current                           現在使用中のバージョンを表示
-phpbrew config threading [ts|nts]         既定の Thread Safe / Non-Thread Safe 設定を取得・変更
+phpbrew config threading [ts|nts]                       既定の Thread Safe / Non-Thread Safe 設定を取得・変更
+phpbrew config ini-template [development|production]    php.ini 作成に使うテンプレートを取得・変更
 ```
 
 `<version>` には以下の形式を指定できます。
@@ -75,13 +76,27 @@ phpbrew config threading ts
 
 `phpbrew config threading ts|nts` で既定値を切り替えるか、`install`/`uninstall`/`use` の各コマンドに `--ts`/`--nts` を付けて個別に指定できます。
 
+## php.ini について
+
+`install` 時、各バージョンのフォルダには `php.ini` が存在しない状態で展開されるため、phpbrew が自動的に作成します。
+
+1. **同じマイナーバージョン（例: 8.3.x）・同じ threading が既にインストール済みで `php.ini` を持っている場合**は、それをコピーして引き継ぎます（同じ threading が無ければ他の threading のものを流用します）。
+2. **引き継ぎ元が無い場合**は、`phpbrew config ini-template` で指定したテンプレート（`php.ini-development` または `php.ini-production`。既定は `development`）から作成します。
+
+```powershell
+# 本番相当のテンプレートを使いたい場合
+phpbrew config ini-template production
+```
+
+拡張機能を有効化するには、対象バージョンの `php.ini`（`%USERPROFILE%\.phpbrew\current\php.ini` など）に `extension=拡張名` を追記してください（例: `extension=curl`）。`ext\` フォルダの DLL 名から `php_` 接頭辞と拡張子を除いたものが拡張名になります。
+
 ## データの保存場所
 
 ```
 %USERPROFILE%\.phpbrew\
   bin\        phpbrew 本体（PATH に登録される）
-  config.json 既定の threading 設定
-  versions\   インストール済みの PHP 本体（例: versions\8.3.12-nts\）
+  config.json 既定の threading / ini-template 設定
+  versions\   インストール済みの PHP 本体（例: versions\8.3.12-nts\、php.ini を含む）
   cache\      ダウンロード済み zip のキャッシュ
   current     使用中バージョンを指すディレクトリジャンクション（PATH に登録される）
 ```
