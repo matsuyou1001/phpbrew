@@ -7,6 +7,8 @@ Windows 専用の PHP バージョンマネージャーです。[nodebrew](https
 - ダウンロード元: [windows.php.net](https://windows.php.net/) の公式ビルド（`releases/` および `releases/archives/`）
 - 追加ランタイム不要（Windows 標準の PowerShell 5.1 以降で動作）
 
+開発者向けのディレクトリ構成・各ファイルの役割は [ARCHITECTURE.md](ARCHITECTURE.md) を参照してください。
+
 ## セットアップ
 
 このリポジトリをクローンし、`Setup.ps1` を実行してください。
