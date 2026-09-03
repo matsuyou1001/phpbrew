@@ -35,7 +35,7 @@ function Set-CurrentPhpVersion {
         [string]$ThreadingFlag
     )
     Initialize-PhpbrewHome
-    $localName = Resolve-LocalVersionName -VersionInput $VersionArg -ThreadingOverride $ThreadingFlag
+    $localName = Resolve-LocalVersionName -VersionInput $VersionArg -ThreadingOverride $ThreadingFlag -AllowBranch
     $targetDir = Join-Path $Script:VersionsDir $localName
 
     if (-not (Test-Path -LiteralPath $targetDir)) {

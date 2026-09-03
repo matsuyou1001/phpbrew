@@ -116,10 +116,47 @@ function Get-InstalledVersionDirs {
     Get-ChildItem -LiteralPath $Script:VersionsDir -Directory | Sort-Object Name
 }
 
+function Resolve-LocalBranchVersionName {
+    param(
+        [Parameter(Mandatory)][string]$Branch,
+        [string]$ThreadingOverride
+    )
+    $pattern = "^$([regex]::Escape($Branch))\.\d+-(ts|nts)$"
+    $candidates = @(Get-InstalledVersionDirs | Where-Object { $_.Name -match $pattern })
+    if ($candidates.Count -eq 0) {
+        Exit-WithError "PHP $Branch 系はインストールされていません。'phpbrew install $Branch' を実行してください。"
+    }
+
+    if ($ThreadingOverride) {
+        Assert-ValidThreading $ThreadingOverride
+        $candidates = @($candidates | Where-Object { $_.Name -like "*-$ThreadingOverride" })
+        if ($candidates.Count -eq 0) {
+            Exit-WithError "PHP $Branch 系の $ThreadingOverride 版はインストールされていません。"
+        }
+        return ($candidates | Sort-Object { [version]($_.Name -replace '-(ts|nts)$', '') } -Descending | Select-Object -First 1).Name
+    }
+
+    $latestVersion = $candidates | ForEach-Object { $_.Name -replace '-(ts|nts)$', '' } | Sort-Object { [version]$_ } -Descending | Select-Object -First 1
+    $sameRevision = @($candidates | Where-Object { ($_.Name -replace '-(ts|nts)$', '') -eq $latestVersion })
+
+    if ($sameRevision.Count -eq 1) {
+        return $sameRevision[0].Name
+    }
+
+    $threading = (Get-PhpbrewConfig).threading
+    Assert-ValidThreading $threading
+    $match = $sameRevision | Where-Object { $_.Name -like "*-$threading" }
+    if (-not $match) {
+        Exit-WithError "PHP $latestVersion の $threading 版はインストールされていません。"
+    }
+    return $match.Name
+}
+
 function Resolve-LocalVersionName {
     param(
         [Parameter(Mandatory)][string]$VersionInput,
-        [string]$ThreadingOverride
+        [string]$ThreadingOverride,
+        [switch]$AllowBranch
     )
     if ($VersionInput -match '^\d+\.\d+\.\d+-(ts|nts)$') {
         return $VersionInput
@@ -128,6 +165,9 @@ function Resolve-LocalVersionName {
         $threading = if ($ThreadingOverride) { $ThreadingOverride } else { (Get-PhpbrewConfig).threading }
         Assert-ValidThreading $threading
         return "$VersionInput-$threading"
+    }
+    if ($AllowBranch -and $VersionInput -match '^\d+\.\d+$') {
+        return Resolve-LocalBranchVersionName -Branch $VersionInput -ThreadingOverride $ThreadingOverride
     }
     Exit-WithError "バージョン指定の形式が不正です: $VersionInput (例: 8.3.12 または 8.3.12-nts)"
 }
