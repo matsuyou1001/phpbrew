@@ -29,8 +29,11 @@ function Show-Help {
         '  phpbrew config ini-template [development|production]  インストール時に php.ini の元にするテンプレートを取得・変更',
         '  phpbrew selfupdate                        phpbrew 本体を GitHub の最新版に更新',
         '',
-        "<version> は '8.3.12' のようなフル指定の他、'8.3' のようなブランチ指定（最新パッチに解決）や",
-        "'latest' も指定できます。--ts / --nts を省略した場合は 'phpbrew config threading' の設定値が使われます。",
+        "<version> は '8.3.12' のようなフル指定の他、'8.3' のようなブランチ指定（install では最新パッチに解決）や",
+        "'latest' (install のみ) も指定できます。--ts / --nts を省略した場合は 'phpbrew config threading' の設定値が使われます。",
+        '',
+        "use にブランチ指定を渡すと、インストール済みの中から該当ブランチの最新リビジョンに切り替わります",
+        "（TS/NTS 両方あれば --ts/--nts か threading 設定で選択）。uninstall/protect/unprotect はフル指定のみです。",
         '',
         "install 時、同じマイナーバージョン・threading の php.ini が既にインストール済みならそれを引き継ぎ、",
         "無ければ 'phpbrew config ini-template' で指定したテンプレート (既定: development) から php.ini を作成します。"
