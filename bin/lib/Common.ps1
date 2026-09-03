@@ -8,7 +8,7 @@ $Script:CacheDir      = Join-Path $Script:PhpbrewHome 'cache'
 $Script:CurrentLink   = Join-Path $Script:PhpbrewHome 'current'
 $Script:ConfigPath    = Join-Path $Script:PhpbrewHome 'config.json'
 
-$Script:DefaultConfig = @{ threading = 'nts'; 'ini-template' = 'development' }
+$Script:DefaultConfig = @{ threading = 'nts'; 'ini-template' = 'development'; protected = @() }
 
 function Write-PhpbrewInfo {
     param([Parameter(Mandatory)][AllowEmptyString()][string]$Message)
@@ -53,6 +53,21 @@ function Save-PhpbrewConfig {
         New-Item -ItemType Directory -Path $Script:PhpbrewHome -Force | Out-Null
     }
     $Config | ConvertTo-Json | Set-Content -LiteralPath $Script:ConfigPath -Encoding UTF8
+}
+
+function Get-ProtectedVersions {
+    $config = Get-PhpbrewConfig
+    if (-not $config.ContainsKey('protected') -or -not $config['protected']) {
+        return @()
+    }
+    return @($config['protected'])
+}
+
+function Save-ProtectedVersions {
+    param([string[]]$Versions)
+    $config = Get-PhpbrewConfig
+    $config['protected'] = @($Versions | Sort-Object -Unique)
+    Save-PhpbrewConfig -Config $config
 }
 
 function Assert-ValidThreading {
