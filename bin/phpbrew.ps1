@@ -21,7 +21,9 @@ function Show-Help {
         '  phpbrew use <version> [--ts|--nts]        使用する PHP バージョンを切り替え',
         '  phpbrew list, phpbrew ls                  インストール済みバージョン一覧を表示',
         '  phpbrew current                           現在使用中のバージョンを表示',
-        '  phpbrew prune [--dry-run]                 各ブランチの最新パッチ以外の古いバージョンをまとめて削除（使用中のバージョンは保護、削除前に確認）',
+        '  phpbrew prune [--dry-run]                 各ブランチの最新パッチ以外の古いバージョンをまとめて削除（使用中・保護中のバージョンは保護、削除前に確認）',
+        '  phpbrew protect <version> [--ts|--nts]    指定バージョンを prune の削除対象から保護',
+        '  phpbrew unprotect <version> [--ts|--nts]  指定バージョンの保護を解除',
         '  phpbrew exec [code]                       現在のバージョンで対話シェルを起動、または引数のコードを実行 (php -a / php -r)',
         '  phpbrew config threading [ts|nts]                既定の Thread Safe / Non-Thread Safe 設定を取得・変更',
         '  phpbrew config ini-template [development|production]  インストール時に php.ini の元にするテンプレートを取得・変更',
@@ -89,6 +91,18 @@ function Invoke-Phpbrew {
         'prune' {
             $dryRun = $rest -contains '--dry-run'
             Invoke-Prune -DryRun:$dryRun
+        }
+        'protect' {
+            if ($rest.Count -lt 1) { Exit-WithError "使用法: phpbrew protect <version> [--ts|--nts]" }
+            $parsed = Get-ThreadingFlag -Arguments $rest
+            if ($parsed.Rest.Count -lt 1) { Exit-WithError "使用法: phpbrew protect <version> [--ts|--nts]" }
+            Protect-PhpVersion -VersionArg $parsed.Rest[0] -ThreadingFlag $parsed.Threading
+        }
+        'unprotect' {
+            if ($rest.Count -lt 1) { Exit-WithError "使用法: phpbrew unprotect <version> [--ts|--nts]" }
+            $parsed = Get-ThreadingFlag -Arguments $rest
+            if ($parsed.Rest.Count -lt 1) { Exit-WithError "使用法: phpbrew unprotect <version> [--ts|--nts]" }
+            Unprotect-PhpVersion -VersionArg $parsed.Rest[0] -ThreadingFlag $parsed.Threading
         }
         'exec' { Invoke-PhpExec -CodeArgs $rest }
         'config' { Invoke-ConfigCommand -Arguments $rest }
