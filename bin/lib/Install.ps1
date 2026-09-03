@@ -124,6 +124,47 @@ function Uninstall-PhpVersion {
     Write-PhpbrewInfo "PHP $localName をアンインストールしました。"
 }
 
+function Protect-PhpVersion {
+    param(
+        [Parameter(Mandatory)][string]$VersionArg,
+        [string]$ThreadingFlag
+    )
+    Initialize-PhpbrewHome
+    $localName = Resolve-LocalVersionName -VersionInput $VersionArg -ThreadingOverride $ThreadingFlag
+    $targetDir = Join-Path $Script:VersionsDir $localName
+
+    if (-not (Test-Path -LiteralPath $targetDir)) {
+        Exit-WithError "PHP $localName はインストールされていません。"
+    }
+
+    $protected = Get-ProtectedVersions
+    if ($protected -contains $localName) {
+        Write-PhpbrewInfo "PHP $localName は既に保護されています。"
+        return
+    }
+
+    Save-ProtectedVersions -Versions ($protected + $localName)
+    Write-PhpbrewInfo "PHP $localName を保護しました。'phpbrew prune' の削除対象から除外されます。"
+}
+
+function Unprotect-PhpVersion {
+    param(
+        [Parameter(Mandatory)][string]$VersionArg,
+        [string]$ThreadingFlag
+    )
+    Initialize-PhpbrewHome
+    $localName = Resolve-LocalVersionName -VersionInput $VersionArg -ThreadingOverride $ThreadingFlag
+
+    $protected = Get-ProtectedVersions
+    if ($protected -notcontains $localName) {
+        Write-PhpbrewInfo "PHP $localName は保護されていません。"
+        return
+    }
+
+    Save-ProtectedVersions -Versions (@($protected | Where-Object { $_ -ne $localName }))
+    Write-PhpbrewInfo "PHP $localName の保護を解除しました。"
+}
+
 function Invoke-Prune {
     param([switch]$DryRun)
     Initialize-PhpbrewHome
@@ -133,6 +174,7 @@ function Invoke-Prune {
         return
     }
     $currentName = Get-CurrentVersionName
+    $protectedVersions = Get-ProtectedVersions
 
     $groups = $dirs | Group-Object {
         if ($_.Name -match '^(?<branch>\d+\.\d+)\.\d+-(?<th>ts|nts)$') {
@@ -143,13 +185,26 @@ function Invoke-Prune {
     }
 
     $toRemove = @()
+    $skippedProtected = @()
     foreach ($g in $groups) {
         if ($g.Group.Count -le 1) { continue }
         $sorted = $g.Group | Sort-Object { [version]($_.Name -replace '-(ts|nts)$', '') } -Descending
         foreach ($d in ($sorted | Select-Object -Skip 1)) {
             if ($d.Name -eq $currentName) { continue }
+            if ($protectedVersions -contains $d.Name) {
+                $skippedProtected += $d
+                continue
+            }
             $toRemove += $d
         }
+    }
+
+    if ($skippedProtected.Count -gt 0) {
+        Write-PhpbrewInfo "以下の $($skippedProtected.Count) 件は保護されているため削除対象から除外します:"
+        foreach ($d in $skippedProtected) {
+            Write-PhpbrewInfo "  $($d.Name)"
+        }
+        Write-PhpbrewInfo ''
     }
 
     if ($toRemove.Count -eq 0) {
