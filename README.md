@@ -44,7 +44,9 @@ phpbrew uninstall <version> [--ts|--nts]  指定バージョンをアンイン�
 phpbrew use <version> [--ts|--nts]        使用する PHP バージョンを切り替え
 phpbrew list, phpbrew ls                  インストール済みバージョン一覧を表示
 phpbrew current                           現在使用中のバージョンを表示
-phpbrew prune [--dry-run]                 各ブランチの最新パッチ以外の古いバージョンをまとめて削除（使用中のバージョンは保護、削除前に確認）
+phpbrew prune [--dry-run]                 各ブランチの最新パッチ以外の古いバージョンをまとめて削除（使用中・保護中のバージョンは保護、削除前に確認）
+phpbrew protect <version> [--ts|--nts]    指定バージョンを prune の削除対象から保護
+phpbrew unprotect <version> [--ts|--nts]  指定バージョンの保護を解除
 phpbrew exec [code]                       現在のバージョンで対話シェルを起動、または引数のコードを実行 (php -a / php -r)
 phpbrew config threading [ts|nts]                       既定の Thread Safe / Non-Thread Safe 設定を取得・変更
 phpbrew config ini-template [development|production]    php.ini 作成に使うテンプレートを取得・変更
@@ -58,6 +60,8 @@ phpbrew selfupdate                        phpbrew 本体を GitHub の最新版�
 - `latest`（リモートで確認できる最新バージョン）
 
 `--ts` / `--nts` を省略した場合は `phpbrew config threading` で設定した既定値が使われます（初期値は `nts`）。同じバージョンでも TS 版・NTS 版は別バージョンとして共存インストールできます。
+
+`phpbrew protect` / `phpbrew unprotect` には `uninstall` と同様、インストール済みのフル指定バージョン（例: `8.3.10`）を指定してください（ブランチ指定・`latest` は不可）。保護したバージョンは `phpbrew prune` の削除対象から常に除外されます（使用中のバージョンと同様の扱い）。
 
 ### 例
 
@@ -86,6 +90,12 @@ phpbrew prune
 
 # 削除対象の確認だけ行い、実際には削除しない
 phpbrew prune --dry-run
+
+# 8.3.10 を prune の削除対象から保護
+phpbrew protect 8.3.10
+
+# 保護を解除（次回の prune で削除対象になり得る）
+phpbrew unprotect 8.3.10
 
 # 現在のバージョンで PHP コードを実行 / 対話シェルを起動
 phpbrew exec "echo phpversion();"
@@ -121,7 +131,7 @@ phpbrew config ini-template production
 ```
 %USERPROFILE%\.phpbrew\
   bin\        phpbrew 本体（PATH に登録される）
-  config.json 既定の threading / ini-template 設定
+  config.json 既定の threading / ini-template 設定、prune から保護するバージョン一覧
   versions\   インストール済みの PHP 本体（例: versions\8.3.12-nts\、php.ini を含む）
   cache\      ダウンロード済み zip のキャッシュ
   current     使用中バージョンを指すディレクトリジャンクション（PATH に登録される）
