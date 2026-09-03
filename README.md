@@ -12,7 +12,7 @@ Windows 専用の PHP バージョンマネージャーです。[nodebrew](https
 このリポジトリをクローンし、`Setup.ps1` を実行してください。
 
 ```powershell
-git clone <このリポジトリ> phpbrew
+git clone https://github.com/matsuyou1001/phpbrew.git
 cd phpbrew
 powershell -ExecutionPolicy Bypass -File .\Setup.ps1
 ```
@@ -23,6 +23,16 @@ powershell -ExecutionPolicy Bypass -File .\Setup.ps1
 2. `%USERPROFILE%\.phpbrew\bin` をユーザー環境変数 `PATH` に追加
 
 セットアップ後、**新しいターミナルを開いて**（PATH の変更を反映させるため）`phpbrew help` を実行できることを確認してください。
+
+## アップデート
+
+`phpbrew selfupdate` を実行すると、[GitHub リポジトリ](https://github.com/matsuyou1001/phpbrew) の `main` ブランチ最新版を取得し、`%USERPROFILE%\.phpbrew\bin` の phpbrew 本体を更新します。
+
+```powershell
+phpbrew selfupdate
+```
+
+PATH の設定は変更されないため、更新後に新しいターミナルを開き直す必要はありません。
 
 ## 使い方
 
@@ -38,6 +48,7 @@ phpbrew prune [--dry-run]                 各ブランチの最新パッチ以�
 phpbrew exec [code]                       現在のバージョンで対話シェルを起動、または引数のコードを実行 (php -a / php -r)
 phpbrew config threading [ts|nts]                       既定の Thread Safe / Non-Thread Safe 設定を取得・変更
 phpbrew config ini-template [development|production]    php.ini 作成に使うテンプレートを取得・変更
+phpbrew selfupdate                        phpbrew 本体を GitHub の最新版に更新
 ```
 
 `<version>` には以下の形式を指定できます。
@@ -79,6 +90,9 @@ phpbrew prune --dry-run
 # 現在のバージョンで PHP コードを実行 / 対話シェルを起動
 phpbrew exec "echo phpversion();"
 phpbrew exec
+
+# phpbrew 本体を GitHub の最新版に更新
+phpbrew selfupdate
 ```
 
 ## Thread Safe / Non-Thread Safe について

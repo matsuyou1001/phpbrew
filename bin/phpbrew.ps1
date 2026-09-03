@@ -7,6 +7,7 @@ $LibDir = Join-Path $PSScriptRoot 'lib'
 . (Join-Path $LibDir 'Use.ps1')
 . (Join-Path $LibDir 'Config.ps1')
 . (Join-Path $LibDir 'Exec.ps1')
+. (Join-Path $LibDir 'SelfUpdate.ps1')
 
 function Show-Help {
     $lines = @(
@@ -24,6 +25,7 @@ function Show-Help {
         '  phpbrew exec [code]                       現在のバージョンで対話シェルを起動、または引数のコードを実行 (php -a / php -r)',
         '  phpbrew config threading [ts|nts]                既定の Thread Safe / Non-Thread Safe 設定を取得・変更',
         '  phpbrew config ini-template [development|production]  インストール時に php.ini の元にするテンプレートを取得・変更',
+        '  phpbrew selfupdate                        phpbrew 本体を GitHub の最新版に更新',
         '',
         "<version> は '8.3.12' のようなフル指定の他、'8.3' のようなブランチ指定（最新パッチに解決）や",
         "'latest' も指定できます。--ts / --nts を省略した場合は 'phpbrew config threading' の設定値が使われます。",
@@ -90,6 +92,7 @@ function Invoke-Phpbrew {
         }
         'exec' { Invoke-PhpExec -CodeArgs $rest }
         'config' { Invoke-ConfigCommand -Arguments $rest }
+        'selfupdate' { Invoke-SelfUpdate }
         default {
             Write-PhpbrewError "不明なコマンドです: $command"
             Show-Help
