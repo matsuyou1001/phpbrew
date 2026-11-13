@@ -7,13 +7,13 @@ function Find-TemplatePhpIni {
         [Parameter(Mandatory)][string]$ExcludeDirName
     )
     $branch = ($Version -split '\.')[0..1] -join '.'
-    $branchPattern = "^$([regex]::Escape($branch))\.\d+-(ts|nts)$"
+    $branchPattern = "^$([regex]::Escape($branch))\.\d+(?:-\d+)?-(ts|nts)$"
     $candidates = Get-InstalledVersionDirs | Where-Object {
         $_.Name -ne $ExcludeDirName -and $_.Name -match $branchPattern
     }
     $sorted = $candidates | Sort-Object -Property `
         @{Expression = { if ($_.Name -like "*-$Threading") { 0 } else { 1 } } }, `
-        @{Expression = { [version]($_.Name -replace '-(ts|nts)$', '') }; Descending = $true }
+        @{Expression = { ConvertTo-PhpVersionKey ($_.Name -replace '-(ts|nts)$', '') }; Descending = $true }
     foreach ($dir in $sorted) {
         $iniPath = Join-Path $dir.FullName 'php.ini'
         if (Test-Path -LiteralPath $iniPath) {
@@ -177,7 +177,7 @@ function Invoke-Prune {
     $protectedVersions = Get-ProtectedVersions
 
     $groups = $dirs | Group-Object {
-        if ($_.Name -match '^(?<branch>\d+\.\d+)\.\d+-(?<th>ts|nts)$') {
+        if ($_.Name -match '^(?<branch>\d+\.\d+)\.\d+(?:-\d+)?-(?<th>ts|nts)$') {
             "$($Matches['branch'])-$($Matches['th'])"
         } else {
             $_.Name
@@ -188,7 +188,7 @@ function Invoke-Prune {
     $skippedProtected = @()
     foreach ($g in $groups) {
         if ($g.Group.Count -le 1) { continue }
-        $sorted = $g.Group | Sort-Object { [version]($_.Name -replace '-(ts|nts)$', '') } -Descending
+        $sorted = $g.Group | Sort-Object { ConvertTo-PhpVersionKey ($_.Name -replace '-(ts|nts)$', '') } -Descending
         foreach ($d in ($sorted | Select-Object -Skip 1)) {
             if ($d.Name -eq $currentName) { continue }
             if ($protectedVersions -contains $d.Name) {
