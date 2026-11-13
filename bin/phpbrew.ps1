@@ -31,6 +31,7 @@ function Show-Help {
         '',
         "<version> は '8.3.12' のようなフル指定の他、'8.3' のようなブランチ指定（install では最新パッチに解決）や",
         "'latest' (install のみ) も指定できます。--ts / --nts を省略した場合は 'phpbrew config threading' の設定値が使われます。",
+        "'8.5.12-1' のようなリビルド版もフル指定できます。リビルド版は元のバージョン (8.5.12) より新しいものとして扱います。",
         '',
         "use にブランチ指定を渡すと、インストール済みの中から該当ブランチの最新リビジョンに切り替わります",
         "（TS/NTS 両方あれば --ts/--nts か threading 設定で選択）。uninstall/protect/unprotect はフル指定のみです。",

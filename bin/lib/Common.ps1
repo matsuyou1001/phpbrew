@@ -84,6 +84,18 @@ function Assert-ValidIniTemplate {
     }
 }
 
+function ConvertTo-PhpVersionKey {
+    # PHP のバージョン文字列を並べ替え用の [version] に変換する。
+    # 通常の X.Y.Z に加え、公式の再ビルド版 X.Y.Z-N (例: 8.5.12-1) を受け付ける。
+    # X.Y.Z は X.Y.Z.0、X.Y.Z-N は X.Y.Z.N とし、X.Y.Z < X.Y.Z-1 < X.Y.(Z+1) の順に並べる
+    param([Parameter(Mandatory)][string]$Version)
+    if ($Version -notmatch '^(?<base>\d+\.\d+\.\d+)(?:-(?<rev>\d+))?$') {
+        throw "PHP のバージョン文字列として解釈できません: $Version"
+    }
+    $rev = if ($Matches['rev']) { $Matches['rev'] } else { '0' }
+    return [version]"$($Matches['base']).$rev"
+}
+
 function Get-Sha256Hex {
     param([Parameter(Mandatory)][string]$Path)
     $sha256 = [System.Security.Cryptography.SHA256]::Create()
@@ -121,7 +133,7 @@ function Resolve-LocalBranchVersionName {
         [Parameter(Mandatory)][string]$Branch,
         [string]$ThreadingOverride
     )
-    $pattern = "^$([regex]::Escape($Branch))\.\d+-(ts|nts)$"
+    $pattern = "^$([regex]::Escape($Branch))\.\d+(?:-\d+)?-(ts|nts)$"
     $candidates = @(Get-InstalledVersionDirs | Where-Object { $_.Name -match $pattern })
     if ($candidates.Count -eq 0) {
         Exit-WithError "PHP $Branch 系はインストールされていません。'phpbrew install $Branch' を実行してください。"
@@ -133,10 +145,10 @@ function Resolve-LocalBranchVersionName {
         if ($candidates.Count -eq 0) {
             Exit-WithError "PHP $Branch 系の $ThreadingOverride 版はインストールされていません。"
         }
-        return ($candidates | Sort-Object { [version]($_.Name -replace '-(ts|nts)$', '') } -Descending | Select-Object -First 1).Name
+        return ($candidates | Sort-Object { ConvertTo-PhpVersionKey ($_.Name -replace '-(ts|nts)$', '') } -Descending | Select-Object -First 1).Name
     }
 
-    $latestVersion = $candidates | ForEach-Object { $_.Name -replace '-(ts|nts)$', '' } | Sort-Object { [version]$_ } -Descending | Select-Object -First 1
+    $latestVersion = $candidates | ForEach-Object { $_.Name -replace '-(ts|nts)$', '' } | Sort-Object { ConvertTo-PhpVersionKey $_ } -Descending | Select-Object -First 1
     $sameRevision = @($candidates | Where-Object { ($_.Name -replace '-(ts|nts)$', '') -eq $latestVersion })
 
     if ($sameRevision.Count -eq 1) {
@@ -158,10 +170,10 @@ function Resolve-LocalVersionName {
         [string]$ThreadingOverride,
         [switch]$AllowBranch
     )
-    if ($VersionInput -match '^\d+\.\d+\.\d+-(ts|nts)$') {
+    if ($VersionInput -match '^\d+\.\d+\.\d+(?:-\d+)?-(ts|nts)$') {
         return $VersionInput
     }
-    if ($VersionInput -match '^\d+\.\d+\.\d+$') {
+    if ($VersionInput -match '^\d+\.\d+\.\d+(?:-\d+)?$') {
         $threading = if ($ThreadingOverride) { $ThreadingOverride } else { (Get-PhpbrewConfig).threading }
         Assert-ValidThreading $threading
         return "$VersionInput-$threading"
@@ -169,7 +181,7 @@ function Resolve-LocalVersionName {
     if ($AllowBranch -and $VersionInput -match '^\d+\.\d+$') {
         return Resolve-LocalBranchVersionName -Branch $VersionInput -ThreadingOverride $ThreadingOverride
     }
-    Exit-WithError "バージョン指定の形式が不正です: $VersionInput (例: 8.3.12 または 8.3.12-nts)"
+    Exit-WithError "バージョン指定の形式が不正です: $VersionInput (例: 8.3.12, 8.3.12-1 または 8.3.12-nts)"
 }
 
 function Get-CurrentVersionName {
