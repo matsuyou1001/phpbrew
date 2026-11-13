@@ -54,6 +54,8 @@ PATH 上から `phpbrew` として直接実行できるようにするための 
 - `Get-PhpbrewConfig` / `Save-PhpbrewConfig`: `config.json` の読み書き
 - `Get-ProtectedVersions` / `Save-ProtectedVersions`: `prune` 対象から除外するバージョンの管理
 - `Assert-ValidThreading` / `Assert-ValidIniTemplate`: 入力値のバリデーション
+- `ConvertTo-PhpVersionKey`: バージョン文字列を並べ替え用の `[version]` に変換
+  （後述「バージョン解決の設計」参照）
 - `Get-Sha256Hex`: ダウンロードした zip のチェックサム検証用
 - `Get-InstalledVersionDirs`: `versions\` 配下のインストール済みバージョンディレクトリ一覧
 - `Resolve-LocalVersionName`: コマンド引数のバージョン文字列をローカルディレクトリ名
@@ -135,6 +137,12 @@ windows.php.net からのリモートバージョン情報取得・解決を担�
 ローカルにインストール済みのバージョンは `versions\<version>-<threading>\`
 （例: `8.3.12-nts`）というディレクトリ名で管理されます。コマンド引数からこの
 ディレクトリ名を導く処理が `Resolve-LocalVersionName` です。
+
+バージョンには通常の `X.Y.Z` のほか、windows.php.net が修正のために再配布する
+リビルド版 `X.Y.Z-N`（例: `8.5.12-1`、ディレクトリ名は `8.5.12-1-nts`）があります。
+`X.Y.Z-N` はそのまま `[version]` にキャストできないため、並べ替えは必ず
+`ConvertTo-PhpVersionKey` を通し、`X.Y.Z` を `X.Y.Z.0`、`X.Y.Z-N` を `X.Y.Z.N` として
+比較します（`8.5.12 < 8.5.12-1 < 8.5.13`）。以下の「フル指定」は両方の形式を含みます。
 
 | 入力形式 | 例 | 解決方法 |
 |---|---|---|
