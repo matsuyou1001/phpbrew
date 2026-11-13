@@ -84,6 +84,18 @@ function Assert-ValidIniTemplate {
     }
 }
 
+function ConvertTo-PhpVersionKey {
+    # PHP のバージョン文字列を並べ替え用の [version] に変換する。
+    # 通常の X.Y.Z に加え、公式の再ビルド版 X.Y.Z-N (例: 8.5.12-1) を受け付ける。
+    # X.Y.Z は X.Y.Z.0、X.Y.Z-N は X.Y.Z.N とし、X.Y.Z < X.Y.Z-1 < X.Y.(Z+1) の順に並べる
+    param([Parameter(Mandatory)][string]$Version)
+    if ($Version -notmatch '^(?<base>\d+\.\d+\.\d+)(?:-(?<rev>\d+))?$') {
+        throw "PHP のバージョン文字列として解釈できません: $Version"
+    }
+    $rev = if ($Matches['rev']) { $Matches['rev'] } else { '0' }
+    return [version]"$($Matches['base']).$rev"
+}
+
 function Get-Sha256Hex {
     param([Parameter(Mandatory)][string]$Path)
     $sha256 = [System.Security.Cryptography.SHA256]::Create()

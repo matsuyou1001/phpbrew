@@ -39,7 +39,7 @@ function Get-RemoteArchivedReleases {
     foreach ($m in [regex]::Matches($html.Content, 'href="(?<name>php-[^"]+\.zip)"')) {
         $fileName = $m.Groups['name'].Value
         if ($fileName -match '(?i)(debug-pack|devel-pack|test-pack|-src\.zip$)') { continue }
-        if ($fileName -notmatch '(?i)^php-(?<ver>\d+\.\d+\.\d+)(?<nts>-nts)?-Win32-(?:vc|vs)\d+-(?<arch>x86|x64)\.zip$') { continue }
+        if ($fileName -notmatch '(?i)^php-(?<ver>\d+\.\d+\.\d+(?:-\d+)?)(?<nts>-nts)?-Win32-(?:vc|vs)\d+-(?<arch>x86|x64)\.zip$') { continue }
         if ($Matches['arch'] -ne 'x64') { continue }
         if (-not $seen.Add($fileName)) { continue }
         $results += [PSCustomObject]@{
@@ -73,7 +73,7 @@ function Get-AllRemoteReleases {
 
 function Sort-VersionStrings {
     param([Parameter(Mandatory)][string[]]$Versions)
-    $Versions | Sort-Object { [version]$_ }
+    $Versions | Sort-Object { ConvertTo-PhpVersionKey $_ }
 }
 
 function Resolve-RemoteVersion {
@@ -85,12 +85,12 @@ function Resolve-RemoteVersion {
     $releases = Get-AllRemoteReleases | Where-Object { $_.Threading -eq $Threading }
 
     if ($Version -eq 'latest') {
-        $best = $releases | Sort-Object { [version]$_.Version } -Descending | Select-Object -First 1
+        $best = $releases | Sort-Object { ConvertTo-PhpVersionKey $_.Version } -Descending | Select-Object -First 1
         if (-not $best) { Exit-WithError "リモートで利用可能な PHP バージョンが見つかりませんでした。" }
         return $best
     }
 
-    if ($Version -match '^\d+\.\d+\.\d+$') {
+    if ($Version -match '^\d+\.\d+\.\d+(?:-\d+)?$') {
         $match = $releases | Where-Object { $_.Version -eq $Version } | Select-Object -First 1
         if (-not $match) {
             Exit-WithError "PHP $Version ($Threading) はリモートに見つかりませんでした。'phpbrew ls-remote' で確認してください。"
@@ -100,14 +100,14 @@ function Resolve-RemoteVersion {
 
     if ($Version -match '^\d+\.\d+$') {
         $branchMatches = $releases | Where-Object { $_.Version -like "$Version.*" }
-        $best = $branchMatches | Sort-Object { [version]$_.Version } -Descending | Select-Object -First 1
+        $best = $branchMatches | Sort-Object { ConvertTo-PhpVersionKey $_.Version } -Descending | Select-Object -First 1
         if (-not $best) {
             Exit-WithError "ブランチ $Version の PHP はリモートに見つかりませんでした。'phpbrew ls-remote' で確認してください。"
         }
         return $best
     }
 
-    Exit-WithError "バージョン指定の形式が不正です: $Version (例: 8.3.12, 8.3, latest)"
+    Exit-WithError "バージョン指定の形式が不正です: $Version (例: 8.3.12, 8.3.12-1, 8.3, latest)"
 }
 
 function Show-RemoteVersionList {
